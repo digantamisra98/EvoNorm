@@ -1,6 +1,7 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+from torch.distributions import uniform
 
 
 def instance_std(x, eps=1e-5):
@@ -22,14 +23,15 @@ class EvoNorm2D(nn.Module):
         self.non_linear = non_linear
         self.version = version
         self.insize = input
-        print(self.insize)
+        #print(self.insize)
         self.training = training
         if self.version not in ['B0', 'S0']:
             raise ValueError("Invalid EvoNorm version")
-        self.gamma = torch.tensor(torch.ones(self.insize), requires_grad=True)
-        self.beta = torch.tensor(torch.zeros(self.insize), requires_grad=True)
+        U = uniform.Uniform(torch.tensor([0.0]), torch.tensor([1.0]))
+        self.gamma = nn.Parameter(U.sample(torch.Size([self.insize])).view(self.insize))
+        self.beta = nn.Parameter(torch.zeros(self.insize))
         if self.non_linear:
-            self.v = torch.tensor(torch.ones(self.insize), requires_grad=True)
+            self.v = nn.Parameter(torch.ones(self.gamma.size()))
         
 
     def _check_input_dim(self, input):
