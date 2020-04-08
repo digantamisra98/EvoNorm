@@ -21,24 +21,27 @@ class EvoNorm2D(nn.Module):
         super(EvoNorm2D, self).__init__()
         self.non_linear = non_linear
         self.version = version
+        self.insize = input
+        print(self.insize)
         self.training = training
         if self.version not in ['B0', 'S0']:
             raise ValueError("Invalid EvoNorm version")
-        size = input.size()
-        self.gamma = torch.tensor(torch.ones(size), requires_grad=True)
-        self.beta = torch.tensor(torch.zeros(size), requires_grad=True)
+        self.gamma = torch.tensor(torch.ones(self.insize), requires_grad=True)
+        self.beta = torch.tensor(torch.zeros(self.insize), requires_grad=True)
         if self.non_linear:
-            self.v = torch.tensor(torch.ones(size), requires_grad=True)
+            self.v = torch.tensor(torch.ones(self.insize), requires_grad=True)
+        
 
     def _check_input_dim(self, input):
         if input.dim() != 4:
             raise ValueError('expected 4D input (got {}D input)'
                              .format(input.dim()))
+            
     
     def forward(self, x):
         if self.version == 'S0':
             if self.non_linear:
-                num = x * torch.nn.sigmoid(self.v * x)
+                num = x * torch.sigmoid(self.v * x)
                 return num / group_std(x) * self.gamma + self.beta
             else:
                 return x * self.gamma + self.beta
