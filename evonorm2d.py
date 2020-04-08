@@ -31,7 +31,7 @@ class EvoNorm2D(nn.Module):
         self.gamma = nn.Parameter(U.sample(torch.Size([self.insize])).view(self.insize))
         self.beta = nn.Parameter(torch.zeros(self.insize))
         if self.non_linear:
-            self.v = nn.Parameter(torch.ones(self.gamma.size()))
+            self.v = nn.Parameter(torch.ones(1,self.insize,1,1))
         
 
     def _check_input_dim(self, input):
