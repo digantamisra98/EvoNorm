@@ -1,8 +1,6 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-from torch.distributions import uniform
-
 
 def instance_std(x, eps=1e-5):
     var = torch.std(x, dim = (2, 3), keepdim=True)
@@ -27,9 +25,8 @@ class EvoNorm2D(nn.Module):
         self.training = training
         if self.version not in ['B0', 'S0']:
             raise ValueError("Invalid EvoNorm version")
-        U = uniform.Uniform(torch.tensor([0.0]), torch.tensor([1.0]))
-        self.gamma = nn.Parameter(U.sample(torch.Size([self.insize])).view(self.insize))
-        self.beta = nn.Parameter(torch.zeros(self.insize))
+        self.gamma = nn.Parameter(torch.ones(1, self.insize, 1, 1))
+        self.beta = nn.Parameter(torch.zeros(1, self.insize, 1, 1))
         if self.non_linear:
             self.v = nn.Parameter(torch.ones(1,self.insize,1,1))
         
