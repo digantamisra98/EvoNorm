@@ -49,6 +49,6 @@ class EvoNorm2D(nn.Module):
                 sigma = tmp.std(dim=1).reshape(1,C,1,1)
                 # sigma = x.std(dim=(0,2,3), keepdim=True)     #For Nightly Build only
                 den = torch.max(sigma, self.v * x + instance_std(x))
-                return x / den ∗ self.gamma + self.beta
+                return x / den * self.gamma + self.beta
             else:
-                return x ∗ self.gamma + self.beta
+                return x * self.gamma + self.beta
