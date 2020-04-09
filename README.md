@@ -1,5 +1,7 @@
 # Evolving Normalization-Activation Layers
 
+*Google AI and DeepMind*
+
 ***Under Construction (Currently Error Prone)***
 
 - [x] Implement EvoNorm S0 and B0 with Training Mode support
