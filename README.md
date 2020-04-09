@@ -6,7 +6,7 @@
 
 - [x] Implement EvoNorm S0 and B0 with Training Mode support
 - [x] Solve Shape Error with group_std and instance_std functions
-- [ ] Solve NaN Error Issue
+- [ ] Solve NaN Error Issue   (Contributions/ PRs welcomed)
 
 <div style="text-align:center"><img src ="figures/evonorm.PNG"  width="1000"/></div>
 <p>
