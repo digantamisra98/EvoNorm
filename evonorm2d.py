@@ -8,7 +8,7 @@ def instance_std(x, eps=1e-5):
 def group_std(x, groups = 32, eps = 1e-5):
     N, C, H, W = x.size()
     x = torch.reshape(x, (N, groups, C // groups, H, W))
-    var = torch.std(x, dim = (3, 4, 2), keepdim = True)
+    var = torch.std(x, dim = (2, 3, 4), keepdim = True)
     return torch.reshape(torch.sqrt(var + eps), (N, C, H, W))
 
 
