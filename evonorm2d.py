@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 
 def instance_std(x, eps=1e-5):
-    var = torch.var(x, dim = (2, 3), keepdim=True)
+    var = torch.var(x, dim = (2, 3), keepdim=True).expand_as(x)
     return torch.sqrt(var + eps)
 
 def group_std(x, groups = 32, eps = 1e-5):
@@ -13,7 +13,7 @@ def group_std(x, groups = 32, eps = 1e-5):
 
 class EvoNorm2D(nn.Module):
 
-    def __init__(self, input, non_linear = True, version = 'S0', momentum = 0.9, training = True):
+    def __init__(self, input, non_linear = True, version = 'B0', momentum = 0.9, training = True):
         super(EvoNorm2D, self).__init__()
         self.non_linear = non_linear
         self.version = version
@@ -26,7 +26,7 @@ class EvoNorm2D(nn.Module):
         self.beta = nn.Parameter(torch.zeros(1, self.insize, 1, 1))
         if self.non_linear:
             self.v = nn.Parameter(torch.ones(1,self.insize,1,1))
-        self.register_buffer('running_var', torch.ones(self.insize))
+        self.register_buffer('running_var', torch.ones(1, self.insize, 1, 1))
 
         self.reset_parameters()
 
@@ -46,7 +46,7 @@ class EvoNorm2D(nn.Module):
         if self.version == 'B0':
             exponential_average_factor = self.momentum
             if self.training:
-                var = x.var([0, 2, 3], unbiased=False)
+                var = torch.var(x, dim = (0, 2, 3), unbiased = False, keepdim = True).expand_as(x)
                 n = x.numel() / x.size(1)
                 with torch.no_grad():
                     self.running_var = exponential_average_factor * var * n / (n - 1)\
