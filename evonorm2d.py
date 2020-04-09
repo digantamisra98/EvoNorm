@@ -9,7 +9,7 @@ def group_std(x, groups = 32, eps = 1e-5):
     N, C, H, W = x.size()
     x = torch.reshape(x, (N, groups, C // groups, H, W))
     var = torch.var(x, dim = (2, 3, 4), keepdim = True)
-    return torch.reshape(torch.sqrt(var + eps), (N, C, H, W))
+    return torch.reshape(torch.sqrt(var + eps), (N, C, 1, 1)).expand(N,C,H,W)
 
 class EvoNorm2D(nn.Module):
 
