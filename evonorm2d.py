@@ -24,7 +24,7 @@ class EvoNorm2D(nn.Module):
         self.training = training
         if self.version not in ['B0', 'S0']:
             raise ValueError("Invalid EvoNorm version")
-        size = input.size()
+        self.insize = input
         self.gamma = nn.Parameter(torch.ones(1, self.insize, 1, 1))
         self.beta = nn.Parameter(torch.zeros(1, self.insize, 1, 1))
         if self.non_linear:
