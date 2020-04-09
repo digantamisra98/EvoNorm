@@ -2,7 +2,6 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 
-
 def instance_std(x, eps=1e-5):
     var = torch.std(x, dim = (2, 3), keepdim=True)
     return torch.sqrt(var + eps)
@@ -21,6 +20,8 @@ class EvoNorm2D(nn.Module):
         super(EvoNorm2D, self).__init__()
         self.non_linear = non_linear
         self.version = version
+        self.insize = input
+        #print(self.insize)
         self.training = training
         if self.version not in ['B0', 'S0']:
             raise ValueError("Invalid EvoNorm version")
@@ -40,6 +41,7 @@ class EvoNorm2D(nn.Module):
         if input.dim() != 4:
             raise ValueError('expected 4D input (got {}D input)'
                              .format(input.dim()))
+            
     
     def forward(self, x):
         if self.version == 'S0':
