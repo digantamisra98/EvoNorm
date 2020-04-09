@@ -50,7 +50,7 @@ class EvoNorm2D(nn.Module):
                 return x * self.gamma + self.beta
         if self.version == 'B0':
             if self.training:
-                var = input.var([0,2,3])
+                var = x.var([0,2,3])
                 self.running_var = (self.momentum * self.running_var) + (1.0-self.momentum) * (x.shape[0]/(x.shape[0]-1)*var)
             else:
                 var = self.running_var
