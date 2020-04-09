@@ -38,10 +38,10 @@ class BasicBlock(nn.Module):
         if dilation > 1:
             raise NotImplementedError("Dilation > 1 not supported in BasicBlock")
         # Both self.conv1 and self.downsample layers downsample the input when stride != 1
-        self.conv1 = FeatureMix(inplanes, planes, stride = stride, name = 'conv3x3')
+        self.conv1 = conv3x3(inplanes, planes, stride)
         self.evo = EvoNorm2D(planes)
         self.relu = nn.ReLU(inplace=True)
-        self.conv2 = FeatureMix(planes, planes, groups =1, name = 'conv3x3')
+        self.conv2 = conv3x3(planes, planes)
         self.bn2 = norm_layer(planes)
         self.downsample = downsample
         self.stride = stride
@@ -88,10 +88,10 @@ class BasicBlock(nn.Module):
         if dilation > 1:
             raise NotImplementedError("Dilation > 1 not supported in BasicBlock")
         # Both self.conv1 and self.downsample layers downsample the input when stride != 1
-        self.conv1 = FeatureMix(inplanes, planes, stride = stride, name = 'conv3x3')
+        self.conv1 = conv3x3(inplanes, planes, stride)
         self.evo = EvoNorm2D(planes, version = 'B0', training = True)
         self.relu = nn.ReLU(inplace=True)
-        self.conv2 = FeatureMix(planes, planes, groups =1, name = 'conv3x3')
+        self.conv2 = conv3x3(planes, planes)
         self.bn2 = norm_layer(planes)
         self.downsample = downsample
         self.stride = stride
