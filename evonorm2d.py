@@ -17,7 +17,7 @@ def group_std(x, groups = 32, eps = 1e-5):
 
 class EvoNorm2D(nn.Module):
 
-    def __init__(self, input, non_linear = True, version = 'S0', training = False):
+    def __init__(self, input, non_linear = True, version = 'S0', momentum = 0.9, training = False):
         super(EvoNorm2D, self).__init__()
         self.non_linear = non_linear
         self.version = version
@@ -25,10 +25,16 @@ class EvoNorm2D(nn.Module):
         if self.version not in ['B0', 'S0']:
             raise ValueError("Invalid EvoNorm version")
         size = input.size()
-        self.gamma = torch.tensor(torch.ones(size), requires_grad=True)
-        self.beta = torch.tensor(torch.zeros(size), requires_grad=True)
+        self.gamma = nn.Parameter(torch.ones(1, self.insize, 1, 1))
+        self.beta = nn.Parameter(torch.zeros(1, self.insize, 1, 1))
         if self.non_linear:
-            self.v = torch.tensor(torch.ones(size), requires_grad=True)
+            self.v = nn.Parameter(torch.ones(1,self.insize,1,1))
+        self.register_buffer('running_var', torch.ones(self.insize))
+
+        self.reset_parameters()
+
+    def reset_parameters(self):
+        self.running_var.fill_(1)
 
     def _check_input_dim(self, input):
         if input.dim() != 4:
@@ -38,17 +44,19 @@ class EvoNorm2D(nn.Module):
     def forward(self, x):
         if self.version == 'S0':
             if self.non_linear:
-                num = x * torch.nn.sigmoid(self.v * x)
+                num = x * torch.sigmoid(self.v * x)
                 return num / group_std(x) * self.gamma + self.beta
             else:
                 return x * self.gamma + self.beta
         if self.version == 'B0':
-            if self.non_linear:
-                _, C, _, _ = x.size()
-                tmp = x.permute(1,0,2,3).reshape(C, -1)
-                sigma = tmp.std(dim=1).reshape(1,C,1,1)
-                # sigma = x.std(dim=(0,2,3), keepdim=True)     #For Nightly Build only
-                den = torch.max(sigma, self.v * x + instance_std(x))
-                return x / den ∗ self.gamma + self.beta
+            if self.training:
+                var = input.var([0,2,3])
+                self.running_var = (self.momentum * self.running_var) + (1.0-self.momentum) * (x.shape[0]/(x.shape[0]-1)*var)
             else:
-                return x ∗ self.gamma + self.beta
+                var = self.running_var
+            sigma = var.view([1, self.insize, 1, 1]).expand_as(x)
+            if self.non_linear:
+                den = torch.max(sigma, self.v * x + instance_std(x))
+                return x / den * self.gamma + self.beta
+            else:
+                return x * self.gamma + self.beta
