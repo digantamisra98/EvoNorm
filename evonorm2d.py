@@ -13,7 +13,7 @@ def group_std(x, groups = 32, eps = 1e-5):
 
 class EvoNorm2D(nn.Module):
 
-    def __init__(self, input, non_linear = True, version = 'B0', momentum = 0.9, training = True):
+    def __init__(self, input, non_linear = True, version = 'S0', momentum = 0.9, training = True):
         super(EvoNorm2D, self).__init__()
         self.non_linear = non_linear
         self.version = version
