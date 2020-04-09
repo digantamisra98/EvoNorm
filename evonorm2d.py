@@ -1,12 +1,9 @@
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
-
 
 def instance_std(x, eps=1e-5):
     var = torch.std(x, dim = (2, 3), keepdim=True)
     return torch.sqrt(var + eps)
-
 
 def group_std(x, groups = 32, eps = 1e-5):
     N, C, H, W = x.size()
@@ -17,11 +14,12 @@ def group_std(x, groups = 32, eps = 1e-5):
 
 class EvoNorm2D(nn.Module):
 
-    def __init__(self, input, non_linear = True, version = 'S0', momentum = 0.9, training = False):
+    def __init__(self, input, non_linear = True, version = 'S0', momentum = 0.9, training = True):
         super(EvoNorm2D, self).__init__()
         self.non_linear = non_linear
         self.version = version
         self.training = training
+        self.momentum = momentum
         if self.version not in ['B0', 'S0']:
             raise ValueError("Invalid EvoNorm version")
         self.insize = input
