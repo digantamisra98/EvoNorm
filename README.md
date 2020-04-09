@@ -1,6 +1,6 @@
 # Evolving Normalization-Activation Layers
 
-***Under Construction***
+***Under Construction (Currently Error Prone)***
 
 <div style="text-align:center"><img src ="figures/evonorm.PNG"  width="1000"/></div>
 <p>
