@@ -11,7 +11,6 @@ def group_std(x, groups = 32, eps = 1e-5):
     var = torch.std(x, dim = (2, 3, 4), keepdim = True)
     return torch.reshape(torch.sqrt(var + eps), (N, C, H, W))
 
-
 class EvoNorm2D(nn.Module):
 
     def __init__(self, input, non_linear = True, version = 'S0', momentum = 0.9, training = True):
@@ -40,6 +39,7 @@ class EvoNorm2D(nn.Module):
                              .format(input.dim()))
     
     def forward(self, x):
+        _check_input_dim(x)
         if self.version == 'S0':
             if self.non_linear:
                 num = x * torch.sigmoid(self.v * x)
@@ -47,14 +47,17 @@ class EvoNorm2D(nn.Module):
             else:
                 return x * self.gamma + self.beta
         if self.version == 'B0':
+            exponential_average_factor = self.momentum
             if self.training:
-                var = x.var([0,2,3])
-                self.running_var = (self.momentum * self.running_var) + (1.0-self.momentum) * (x.shape[0]/(x.shape[0]-1)*var)
+                var = x.var([0, 2, 3], unbiased=False)
+                n = x.numel() / x.size(1)
+                with torch.no_grad():
+                    self.running_var = exponential_average_factor * var * n / (n - 1)\
+                        + (1 - exponential_average_factor) * self.running_var
             else:
                 var = self.running_var
-            sigma = var.view([1, self.insize, 1, 1]).expand_as(x)
             if self.non_linear:
-                den = torch.max(sigma, self.v * x + instance_std(x))
+                den = torch.max(var, self.v * x + instance_std(x))
                 return x / den * self.gamma + self.beta
             else:
                 return x * self.gamma + self.beta
