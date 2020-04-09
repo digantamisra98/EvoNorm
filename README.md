@@ -5,7 +5,7 @@
 - [x] Implement EvoNorm S0 and B0 with Training Mode support
 - [x] Solve Shape Error with group_std and instance_std functions
 - [x] Solve NaN Error Issue with S0
-- [ ] Fix Error with shape in running variance calculation
+- [ ] Fix Error with shape in running variance calculation in EvoNorm B0
 
 <div style="text-align:center"><img src ="figures/evonorm.PNG"  width="1000"/></div>
 <p>
