@@ -44,17 +44,15 @@ class EvoNorm2D(nn.Module):
             else:
                 return x * self.gamma + self.beta
         if self.version == 'B0':
-            exponential_average_factor = self.momentum
             if self.training:
-                var = torch.var(x, dim = (0, 2, 3), unbiased = False, keepdim = True).expand_as(x)
-                n = x.numel() / x.size(1)
+                var = torch.var(x, dim = (0, 2, 3), unbiased = False, keepdim = True).reshape(1, x.size(1), 1, 1)
                 with torch.no_grad():
-                    self.running_var = exponential_average_factor * var * n / (n - 1)\
-                        + (1 - exponential_average_factor) * self.running_var
+                   self.running_var.copy_(self.momentum * self.running_var + (1 - self.momentum) * var)
             else:
                 var = self.running_var
+
             if self.non_linear:
-                den = torch.max(var, self.v * x + instance_std(x))
+                den = torch.max((var+self.eps).sqrt(), self.v * x + instance_std(x))
                 return x / den * self.gamma + self.beta
             else:
                 return x * self.gamma + self.beta
