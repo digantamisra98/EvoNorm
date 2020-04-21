@@ -13,12 +13,13 @@ def group_std(x, groups = 32, eps = 1e-5):
 
 class EvoNorm2D(nn.Module):
 
-    def __init__(self, input, non_linear = True, version = 'S0', momentum = 0.9, training = True):
+    def __init__(self, input, non_linear = True, version = 'S0', momentum = 0.9, eps = 1e-5, training = True):
         super(EvoNorm2D, self).__init__()
         self.non_linear = non_linear
         self.version = version
         self.training = training
         self.momentum = momentum
+        self.eps = eps
         if self.version not in ['B0', 'S0']:
             raise ValueError("Invalid EvoNorm version")
         self.insize = input
@@ -40,7 +41,7 @@ class EvoNorm2D(nn.Module):
         if self.version == 'S0':
             if self.non_linear:
                 num = x * torch.sigmoid(self.v * x)
-                return num / group_std(x) * self.gamma + self.beta
+                return num / group_std(x, eps = self.eps) * self.gamma + self.beta
             else:
                 return x * self.gamma + self.beta
         if self.version == 'B0':
@@ -52,7 +53,7 @@ class EvoNorm2D(nn.Module):
                 var = self.running_var
 
             if self.non_linear:
-                den = torch.max((var+self.eps).sqrt(), self.v * x + instance_std(x))
+                den = torch.max((var+self.eps).sqrt(), self.v * x + instance_std(x, eps = self.eps))
                 return x / den * self.gamma + self.beta
             else:
                 return x * self.gamma + self.beta
