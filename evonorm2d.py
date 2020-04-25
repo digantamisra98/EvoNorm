@@ -13,7 +13,7 @@ def group_std(x, groups = 32, eps = 1e-5):
 
 class EvoNorm2D(nn.Module):
 
-    def __init__(self, input, non_linear = True, version = 'S0', momentum = 0.9, eps = 1e-5, training = True):
+    def __init__(self, input, non_linear = True, version = 'S0', affine = True, momentum = 0.9, eps = 1e-5, training = True):
         super(EvoNorm2D, self).__init__()
         self.non_linear = non_linear
         self.version = version
@@ -23,21 +23,31 @@ class EvoNorm2D(nn.Module):
         if self.version not in ['B0', 'S0']:
             raise ValueError("Invalid EvoNorm version")
         self.insize = input
-        self.gamma = nn.Parameter(torch.ones(1, self.insize, 1, 1))
-        self.beta = nn.Parameter(torch.zeros(1, self.insize, 1, 1))
-        if self.non_linear:
-            self.v = nn.Parameter(torch.ones(1,self.insize,1,1))
+        self.affine = affine
+
+        if self.affine:
+            self.gamma = nn.Parameter(torch.ones(1, self.insize, 1, 1))
+            self.beta = nn.Parameter(torch.zeros(1, self.insize, 1, 1))
+            if self.non_linear:
+                self.v = nn.Parameter(torch.ones(1,self.insize,1,1))
+        else:
+            self.register_parameter('gamma', None)
+            self.register_parameter('beta', None)
+            self.register_buffer('v', None)
         self.register_buffer('running_var', torch.ones(1, self.insize, 1, 1))
 
         self.reset_parameters()
 
     def reset_parameters(self):
         self.running_var.fill_(1)
-    
-    def forward(self, x):
+
+    def _check_input_dim(self, x):
         if x.dim() != 4:
             raise ValueError('expected 4D input (got {}D input)'
                              .format(x.dim()))
+    
+    def forward(self, x):
+        self._check_input_dim(x)
         if self.version == 'S0':
             if self.non_linear:
                 num = x * torch.sigmoid(self.v * x)
@@ -46,9 +56,9 @@ class EvoNorm2D(nn.Module):
                 return x * self.gamma + self.beta
         if self.version == 'B0':
             if self.training:
-                var = torch.var(x, dim = (0, 2, 3), unbiased = False, keepdim = True).reshape(1, x.size(1), 1, 1)
-                with torch.no_grad():
-                   self.running_var.copy_(self.momentum * self.running_var + (1 - self.momentum) * var)
+                var = torch.var(x, dim = (0, 2, 3), unbiased = False, keepdim = True)
+                self.running_var.mul_(self.momentum)
+                self.running_var.add_((1 - self.momentum) * var)
             else:
                 var = self.running_var
 
