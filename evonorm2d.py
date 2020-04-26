@@ -3,6 +3,8 @@ import torch.nn as nn
 
 def instance_std(x, eps=1e-5):
     var = torch.var(x, dim = (2, 3), keepdim=True).expand_as(x)
+    if torch.isnan(var).any():
+        var = torch.zeros(var.shape)
     return torch.sqrt(var + eps)
 
 def group_std(x, groups = 32, eps = 1e-5):
