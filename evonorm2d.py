@@ -1,6 +1,22 @@
 import torch
 import torch.nn as nn
 
+class SwishImplementation(torch.autograd.Function):
+    @staticmethod
+    def forward(ctx, i):
+        ctx.save_for_backward(i)
+        return i * torch.sigmoid(i)
+
+    @staticmethod
+    def backward(ctx, grad_output):
+        sigmoid_i = torch.sigmoid(ctx.saved_variables[0])
+        return grad_output * (sigmoid_i * (1 + ctx.saved_variables[0] * (1 - sigmoid_i)))
+
+
+class MemoryEfficientSwish(nn.Module):
+    def forward(self, x):
+        return SwishImplementation.apply(x)
+
 def instance_std(x, eps=1e-5):
     var = torch.var(x, dim = (2, 3), keepdim=True).expand_as(x)
     if torch.isnan(var).any():
@@ -15,12 +31,14 @@ def group_std(x, groups = 32, eps = 1e-5):
 
 class EvoNorm2D(nn.Module):
 
-    def __init__(self, input, non_linear = True, version = 'S0', affine = True, momentum = 0.9, eps = 1e-5, groups = 32, training = True):
+    def __init__(self, input, non_linear = True, version = 'S0', efficien affine = True, momentum = 0.9, eps = 1e-5, groups = 32, training = True):
         super(EvoNorm2D, self).__init__()
         self.non_linear = non_linear
         self.version = version
         self.training = training
         self.momentum = momentum
+        if self.version == 'S0':
+            self.swish = MemoryEfficientSwish()
         self.groups = groups
         self.eps = eps
         if self.version not in ['B0', 'S0']:
@@ -53,7 +71,8 @@ class EvoNorm2D(nn.Module):
         self._check_input_dim(x)
         if self.version == 'S0':
             if self.non_linear:
-                num = x * torch.sigmoid(self.v * x)
+                num = x * torch.sigmoid(self.v * x)   # Original Swish Implementation, however memory intensive.
+                #num = self.swish(x)    # Experimental Memory Efficient Variant of Swish
                 return num / group_std(x, groups = self.groups, eps = self.eps) * self.gamma + self.beta
             else:
                 return x * self.gamma + self.beta
