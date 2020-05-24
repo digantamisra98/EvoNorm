@@ -31,12 +31,13 @@ def group_std(x, groups = 32, eps = 1e-5):
 
 class EvoNorm2D(nn.Module):
 
-    def __init__(self, input, non_linear = True, version = 'S0', efficien affine = True, momentum = 0.9, eps = 1e-5, groups = 32, training = True):
+    def __init__(self, input, non_linear = True, version = 'S0', efficient = False, affine = True, momentum = 0.9, eps = 1e-5, groups = 32, training = True):
         super(EvoNorm2D, self).__init__()
         self.non_linear = non_linear
         self.version = version
         self.training = training
         self.momentum = momentum
+        self.efficient = efficient
         if self.version == 'S0':
             self.swish = MemoryEfficientSwish()
         self.groups = groups
@@ -71,8 +72,10 @@ class EvoNorm2D(nn.Module):
         self._check_input_dim(x)
         if self.version == 'S0':
             if self.non_linear:
-                num = x * torch.sigmoid(self.v * x)   # Original Swish Implementation, however memory intensive.
-                #num = self.swish(x)    # Experimental Memory Efficient Variant of Swish
+                if not self.efficient:
+                    num = x * torch.sigmoid(self.v * x)   # Original Swish Implementation, however memory intensive.
+                else:
+                    num = self.swish(x)    # Experimental Memory Efficient Variant of Swish
                 return num / group_std(x, groups = self.groups, eps = self.eps) * self.gamma + self.beta
             else:
                 return x * self.gamma + self.beta
